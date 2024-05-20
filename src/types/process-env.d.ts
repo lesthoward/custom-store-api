@@ -6,6 +6,7 @@ declare global {
             PORT: string;
             THREEKIT_ORG_ID: string;
             THREEKIT_PRIVATE_TOKEN: string;
+            THREEKIT_ENVIRONMENT: string;
         }
     }
 }
