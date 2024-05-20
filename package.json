@@ -15,6 +15,10 @@
     "prepare": "husky",
     "check:types": "tsc --noEmit"
   },
+  "engines": {
+    "npm": "use yarn",
+    "node": ">=18"
+  },
   "devDependencies": {
     "@eslint/js": "^9.3.0",
     "@types/express": "^4.17.21",
@@ -30,11 +34,11 @@
     "morgan": "^1.10.0",
     "nodemon": "^3.1.0",
     "prettier": "3.2.5",
-    "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
-    "typescript-eslint": "^7.9.0"
+    "typescript-eslint": "^7.9.0",
+    "concurrently": "8.2.2"
   },
   "dependencies": {
-    "concurrently": "8.2.2"
+    "ts-node": "^10.9.2"
   }
 }
