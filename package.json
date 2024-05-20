@@ -15,10 +15,6 @@
     "prepare": "husky",
     "check:types": "tsc --noEmit"
   },
-  "engines": {
-    "npm": "use yarn",
-    "node": ">=20"
-  },
   "devDependencies": {
     "@eslint/js": "^9.3.0",
     "@types/express": "^4.17.21",
