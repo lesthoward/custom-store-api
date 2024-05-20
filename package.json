@@ -16,7 +16,8 @@
     "check:types": "tsc --noEmit"
   },
   "engines": {
-    "npm": "use yarn"
+    "npm": "use yarn",
+    "node": ">=20"
   },
   "devDependencies": {
     "@eslint/js": "^9.3.0",
