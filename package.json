@@ -16,7 +16,6 @@
     "check:types": "tsc --noEmit"
   },
   "engines": {
-    "npm": "use yarn",
     "node": ">=18"
   },
   "devDependencies": {
