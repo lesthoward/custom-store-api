@@ -4,8 +4,8 @@
   "main": "src/index.ts",
   "license": "MIT",
   "scripts": {
-    "start": "nodemon src/index.ts",
-    "dev": "ts-node src/index.ts",
+    "start": "ts-node src/index.ts",
+    "dev": "nodemon src/index.ts",
     "eslint": "eslint src/**/*.{js,jsx,ts,tsx,json,yml}",
     "eslint:fix": "eslint src/**/*.{js,jsx,ts,tsx,json,yml} --fix",
     "prettier": "prettier --check src/**/*.{js,jsx,ts,tsx,json,yml}",
