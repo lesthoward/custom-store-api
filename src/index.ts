@@ -2,7 +2,7 @@ import express, { Application } from 'express';
 import * as process from 'node:process';
 import morgan from 'morgan';
 import 'dotenv/config';
-import { threekitRoutes } from './routes/threekit.routes';
+import { threekitRoutes } from './routes/api.routes';
 
 const app: Application = express();
 const port = process.env.PORT || 5000;
@@ -19,5 +19,6 @@ app.use('*', (req, res) => {
 });
 
 app.listen(port, () => {
+    /* eslint-disable no-console */
     console.log(`Server listening on port ${port}`);
 });
