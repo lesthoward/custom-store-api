@@ -132,7 +132,7 @@ export const createStoreHandler = async (
         res.json(response.apiResponse);
     } catch (error) {
         const knownError = error as any;
-        res.json(
+        res.status(500).json(
             new CatchError({
                 message: knownError?.message,
                 details: knownError,
