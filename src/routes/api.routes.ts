@@ -8,7 +8,7 @@ import {
 const router: Router = express.Router();
 
 router.get('/store/:storeId', getStoreHandler);
-router.post('/create-datatable', createDatatableHandler);
-router.post('/create-store', createStoreHandler);
+router.post('/datatable', createDatatableHandler);
+router.post('/store', createStoreHandler);
 
 export { router as threekitRoutes };
