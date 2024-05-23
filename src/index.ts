@@ -3,6 +3,7 @@ import * as process from 'node:process';
 import morgan from 'morgan';
 import 'dotenv/config';
 import { threekitRoutes } from './routes/api.routes';
+import cors from 'cors';
 
 const app: Application = express();
 const port = process.env.PORT || 5000;
@@ -11,6 +12,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(express.static('public'));
+app.use(
+    cors({ origin: 'https://wages-universe-raising-bryan.trycloudflare.com' })
+);
 
 app.use('/api/v1/threekit', threekitRoutes);
 
