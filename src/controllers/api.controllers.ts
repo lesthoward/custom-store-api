@@ -23,6 +23,8 @@ export const getStoreHandler = async (
     res: Response
 ) => {
     try {
+        req.params.storeId = decodeURIComponent(req.params.storeId);
+
         // Validate the request params
         await getStoreSchema.validateAsync(req.params);
 
@@ -132,7 +134,7 @@ export const createStoreHandler = async (
         res.json(response.apiResponse);
     } catch (error) {
         const knownError = error as any;
-        res.status(500).json(
+        res.status(knownError.status || 500).json(
             new CatchError({
                 message: knownError?.message,
                 details: knownError,
