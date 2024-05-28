@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
 import {
     createDatatableSchema,
+    deleteStoreSchema,
     getStoreSchema,
     updateDatatableSchema,
 } from '../validators/index.validator';
 import {
     createDatatable,
+    deleteDatatableById,
     getDatatableByName,
     getDatatableRows,
     updateDatatable,
@@ -13,6 +15,63 @@ import {
 import { storesDatatableName } from '../constants/threekit.constants';
 import { StoresColumnNames } from '../types/threekit.types';
 import { CatchError } from '../helpers/catch.helpers';
+
+interface DeleteStoreParams {
+    storeId: string;
+}
+
+export const deleteStoreHandler = async (
+    req: Request<any, any, any, DeleteStoreParams, any>,
+    res: Response
+) => {
+    try {
+        await deleteStoreSchema.validateAsync(req.query);
+
+        // Get the store from the datatable
+        const datatableByNameResponse =
+            await getDatatableByName(storesDatatableName);
+
+        if (!datatableByNameResponse.datatable)
+            throw new Error(`Datatable ${storesDatatableName} not found.`);
+
+        const storesDatatableRows = await getDatatableRows<StoresColumnNames>(
+            datatableByNameResponse.datatable?.id
+        );
+
+        const store = storesDatatableRows.rows.find(
+            row => row.value.store_id === req.query.storeId
+        );
+
+        if (store?.value.customer_configurations_datatable_id) {
+            await deleteDatatableById(
+                store.value.customer_configurations_datatable_id
+            );
+        }
+
+        const newStoresDatatableRows = storesDatatableRows.rows.filter(
+            row => row.value.store_id !== req.query.storeId
+        );
+
+        await updateDatatable({
+            action: 'replaceRecords',
+            datatableId: datatableByNameResponse.datatable.id,
+            datatableName: datatableByNameResponse.datatable.name,
+            type: 'store',
+            data: newStoresDatatableRows.map(row => row.value),
+        });
+
+        res.send('ok');
+    } catch (error: any) {
+        res.json(
+            new CatchError({
+                message:
+                    error?.message ||
+                    'An error occurred while deleting the store.',
+                details: error,
+            })
+        );
+    }
+};
 
 interface GetStoreParams {
     storeId: string;
@@ -121,14 +180,16 @@ export const createStoreHandler = async (
             // TODO: change datatableName
             datatableName: datatable.name,
             type: 'store',
-            data: {
-                customer_configurations_datatable_id:
-                    customerConfigurationsDatatableResponse.apiResponse.id,
-                created_at: new Date().toISOString(),
-                store_id: req.body.storeId,
-                store_name: req.body.storeName,
-                updated_at: 'null',
-            },
+            data: [
+                {
+                    customer_configurations_datatable_id:
+                        customerConfigurationsDatatableResponse.apiResponse.id,
+                    created_at: new Date().toISOString(),
+                    store_id: req.body.storeId,
+                    store_name: req.body.storeName,
+                    updated_at: 'null',
+                },
+            ],
         });
 
         res.json(response.apiResponse);

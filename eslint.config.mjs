@@ -11,9 +11,9 @@ export default [
     eslintPluginPrettierRecommended,
     {
         rules: {
-            "@typescript-eslint/no-explicit-any": "off",
-            "no-console": ["error", { allow: ["error"] }],
-            "no-case-declarations": "off",
-        }
-    }
+            '@typescript-eslint/no-explicit-any': 'off',
+            'no-console': ['error', { allow: ['error'] }],
+            'no-case-declarations': 'off',
+        },
+    },
 ];

@@ -12,9 +12,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(express.static('public'));
-app.use(
-    cors({ origin: 'https://wages-universe-raising-bryan.trycloudflare.com' })
-);
+
+// CORS
+app.use(cors());
 
 app.use('/api/v1/threekit', threekitRoutes);
 

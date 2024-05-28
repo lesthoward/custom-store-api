@@ -23,6 +23,19 @@ import papaparse from 'papaparse';
 
 const apiURL = `https://${process.env.THREEKIT_ENVIRONMENT}.threekit.com/api`;
 
+export const deleteDatatableById = async (datatableId: string) => {
+    const deleteDatatableEndpoint = `${apiURL}/datatables/${datatableId}?org_id=${process.env.THREEKIT_ORG_ID}`;
+    const response = await axios.delete(deleteDatatableEndpoint, {
+        headers: {
+            Authorization: `Bearer ${process.env.THREEKIT_PRIVATE_TOKEN}`,
+        },
+    });
+
+    return {
+        apiResponse: response.data,
+    };
+};
+
 export const getDatatableRows = async <T extends string | number | symbol>(
     datatableId: string
 ) => {
@@ -37,13 +50,19 @@ export const getDatatableRows = async <T extends string | number | symbol>(
 };
 
 export const updateDatatable = async ({
+    action = 'addRecord',
     datatableId,
     datatableName,
     type,
     data,
 }: UpdateDatatableUnion): Promise<UpdateDatatableResponse> => {
     const updateDatatableEndpoint = `${apiURL}/datatables/${datatableId}?org_id=${process.env.THREEKIT_ORG_ID}`;
-    const datatableRows = await getDatatableRows(datatableId);
+    // If the action is addRecord, get the existing rows, otherwise, update the datatable with the provided data from params only
+    const datatableRows =
+        action === 'addRecord'
+            ? (await getDatatableRows(datatableId)).rows
+            : [];
+
     let datatableColumnInfo: ColumnInfo[] = [];
 
     switch (type) {
@@ -57,8 +76,8 @@ export const updateDatatable = async ({
         form.append('name', datatableName);
         form.append('columnInfo', JSON.stringify(datatableColumnInfo));
         const file = papaparse.unparse([
-            data,
-            ...datatableRows.rows.map(row => row.value),
+            ...data,
+            ...datatableRows.map(row => row.value),
         ]);
         form.append('file', file, {
             filename: `${datatableName}.csv`,
@@ -84,6 +103,9 @@ export const updateDatatable = async ({
     }
 };
 
+/**
+ * Check if a datatable with the specified name exists
+ */
 export const getDatatableByName = async (
     datatableName: string
 ): Promise<GetDatatableByNameResponse> => {
@@ -97,6 +119,7 @@ export const getDatatableByName = async (
     });
     const datatablesCount = response.data.count;
     const countPages = Math.ceil(datatablesCount / resultsPerPage);
+
     let datatable = response.data.datatables.find(
         (datatable: any) => datatable.name === datatableName
     ) as ThreekitGetDatatableByName;

@@ -19,3 +19,7 @@ export const updateDatatableSchema = Joi.object({
 export const getStoreSchema = Joi.object({
     storeId: Joi.string().required().max(120),
 });
+
+export const deleteStoreSchema = Joi.object({
+    storeId: Joi.string().required().max(120),
+});
