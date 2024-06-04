@@ -16,6 +16,7 @@ import { StoresColumnNames } from '../types/threekit.types';
 
 interface GetCustomerConfigQuery {
     storeId: string;
+    customerId: string;
 }
 
 export const getCustomerConfigHandler = async (
@@ -44,7 +45,11 @@ export const getCustomerConfigHandler = async (
             customerConfigurationsDatatableData.id
         );
 
-        res.json(customerConfigurationsDatatableRows);
+        const rows = customerConfigurationsDatatableRows?.rows.filter(
+            row => row.value.customer_id === req.query.customerId
+        );
+
+        res.json(rows || []);
     } catch (error: any) {
         res.status(500).json(
             new CatchError({

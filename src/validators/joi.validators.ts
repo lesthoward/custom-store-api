@@ -35,5 +35,6 @@ export const deleteStoreSchema = Joi.object({
 });
 
 export const getCustomerConfigSchema = Joi.object({
+    customerId: Joi.string().required().max(120),
     storeId: Joi.string().required().max(120),
 });
