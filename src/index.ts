@@ -16,6 +16,16 @@ app.use(express.static('public'));
 // CORS
 app.use(cors());
 
+// Trim all the incoming request body strings
+app.use((req, res, next) => {
+    for (const key in req.body) {
+        if (typeof req.body[key] === 'string') {
+            req.body[key] = req.body[key].trim();
+        }
+    }
+    next();
+});
+
 app.use('/api/v1/threekit', threekitRoutes);
 
 app.use('*', (req, res) => {

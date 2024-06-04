@@ -4,12 +4,13 @@ import {
     GetDatatableByNameResponse,
     TheekitGetDatatableRows,
     SaveCustomerConfigurationsDatatable,
-    ThreekitGetDatatableByName,
-    UpdateDatatableUnion,
+    ThreekitGetDatatableResponse,
     CreateDatatableResponse,
     ThreekitCreateDatatable,
     UpdateDatatableResponse,
     ThreekitUpdateDatatable,
+    UpdateDatatableParams,
+    StoresColumnNames,
 } from '../types/threekit.types';
 import {
     customerConfigurationsColumnInfo,
@@ -22,6 +23,51 @@ import FormData from 'form-data';
 import papaparse from 'papaparse';
 
 const apiURL = `https://${process.env.THREEKIT_ENVIRONMENT}.threekit.com/api`;
+
+interface GetStoreRowsParams {
+    storeId: string;
+}
+
+export const getStoreRows = async ({ storeId }: GetStoreRowsParams) => {
+    // Get the store from the datatable
+    const datatableByNameResponse =
+        await getDatatableByName(storesDatatableName);
+
+    if (!datatableByNameResponse.datatable)
+        throw new Error(`Datatable ${storesDatatableName} not found.`);
+
+    const storesDatatableRows = await getDatatableRows<StoresColumnNames>(
+        datatableByNameResponse.datatable?.id
+    );
+
+    const store = storesDatatableRows?.rows.find(
+        row => row.value.store_id === storeId
+    );
+
+    if (!store) throw new Error(`Store with id ${storeId} not found.`);
+
+    const storeRows = await getDatatableRows<StoresColumnNames>(
+        datatableByNameResponse.datatable?.id
+    );
+    return {
+        info: store,
+        data: storeRows,
+    };
+};
+
+export const getDatatableById = async (datatableId: string) => {
+    const getDatatableEndpoint = `${apiURL}/datatables/${datatableId}?org_id=${process.env.THREEKIT_ORG_ID}`;
+    const response = await axios.get<ThreekitGetDatatableResponse>(
+        getDatatableEndpoint,
+        {
+            headers: {
+                Authorization: `Bearer ${process.env.THREEKIT_PRIVATE_TOKEN}`,
+            },
+        }
+    );
+
+    return response.data;
+};
 
 export const deleteDatatableById = async (datatableId: string) => {
     const deleteDatatableEndpoint = `${apiURL}/datatables/${datatableId}?org_id=${process.env.THREEKIT_ORG_ID}`;
@@ -46,7 +92,7 @@ export const getDatatableRows = async <T extends string | number | symbol>(
         },
     });
 
-    return response.data as TheekitGetDatatableRows<T>;
+    return response.data as TheekitGetDatatableRows<T> | undefined;
 };
 
 export const updateDatatable = async ({
@@ -55,12 +101,12 @@ export const updateDatatable = async ({
     datatableName,
     type,
     data,
-}: UpdateDatatableUnion): Promise<UpdateDatatableResponse> => {
+}: UpdateDatatableParams): Promise<UpdateDatatableResponse> => {
     const updateDatatableEndpoint = `${apiURL}/datatables/${datatableId}?org_id=${process.env.THREEKIT_ORG_ID}`;
     // If the action is addRecord, get the existing rows, otherwise, update the datatable with the provided data from params only
     const datatableRows =
         action === 'addRecord'
-            ? (await getDatatableRows(datatableId)).rows
+            ? (await getDatatableRows(datatableId))?.rows
             : [];
 
     let datatableColumnInfo: ColumnInfo[] = [];
@@ -68,6 +114,9 @@ export const updateDatatable = async ({
     switch (type) {
         case 'store':
             datatableColumnInfo = storesColumnInfo;
+            break;
+        case 'customer_configurations':
+            datatableColumnInfo = customerConfigurationsColumnInfo;
             break;
     }
 
@@ -77,7 +126,7 @@ export const updateDatatable = async ({
         form.append('columnInfo', JSON.stringify(datatableColumnInfo));
         const file = papaparse.unparse([
             ...data,
-            ...datatableRows.map(row => row.value),
+            ...(datatableRows ? datatableRows.map(row => row.value) : []),
         ]);
         form.append('file', file, {
             filename: `${datatableName}.csv`,
@@ -122,7 +171,7 @@ export const getDatatableByName = async (
 
     let datatable = response.data.datatables.find(
         (datatable: any) => datatable.name === datatableName
-    ) as ThreekitGetDatatableByName;
+    ) as ThreekitGetDatatableResponse | undefined;
 
     // If the datatable is not found on the first page, check the rest of the pages
     if (!datatable && countPages > 1) {

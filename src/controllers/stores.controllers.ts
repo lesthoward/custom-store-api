@@ -4,12 +4,13 @@ import {
     deleteStoreSchema,
     getStoreSchema,
     updateDatatableSchema,
-} from '../validators/index.validator';
+} from '../validators/joi.validators';
 import {
     createDatatable,
     deleteDatatableById,
     getDatatableByName,
     getDatatableRows,
+    getStoreRows,
     updateDatatable,
 } from '../helpers/threekit.helpers';
 import { storesDatatableName } from '../constants/threekit.constants';
@@ -38,9 +39,13 @@ export const deleteStoreHandler = async (
             datatableByNameResponse.datatable?.id
         );
 
-        const store = storesDatatableRows.rows.find(
+        const store = storesDatatableRows?.rows.find(
             row => row.value.store_id === req.query.storeId
         );
+
+        if (!store) {
+            throw new Error('Could not find the store to delete');
+        }
 
         if (store?.value.customer_configurations_datatable_id) {
             await deleteDatatableById(
@@ -48,9 +53,13 @@ export const deleteStoreHandler = async (
             );
         }
 
-        const newStoresDatatableRows = storesDatatableRows.rows.filter(
+        const newStoresDatatableRows = storesDatatableRows?.rows.filter(
             row => row.value.store_id !== req.query.storeId
         );
+
+        if (!newStoresDatatableRows) {
+            throw new Error('Could not find the store to delete');
+        }
 
         await updateDatatable({
             action: 'replaceRecords',
@@ -87,31 +96,11 @@ export const getStoreHandler = async (
         // Validate the request params
         await getStoreSchema.validateAsync(req.params);
 
-        // Get the store from the datatable
-        const datatableByNameResponse =
-            await getDatatableByName(storesDatatableName);
-
-        if (!datatableByNameResponse.datatable)
-            throw new Error(`Datatable ${storesDatatableName} not found.`);
-
-        const storesDatatableRows = await getDatatableRows<StoresColumnNames>(
-            datatableByNameResponse.datatable?.id
-        );
-        const store = storesDatatableRows.rows.find(
-            row => row.value.store_id === req.params.storeId
-        );
-
-        if (!store)
-            throw new Error(`Store with id ${req.params.storeId} not found.`);
-
-        const storeRows = await getDatatableRows<StoresColumnNames>(
-            datatableByNameResponse.datatable?.id
-        );
-
-        res.json({
-            info: store,
-            data: storeRows,
+        const storeRows = await getStoreRows({
+            storeId: req.params.storeId,
         });
+
+        res.json(storeRows);
     } catch (error: any) {
         res.json(
             new CatchError({
@@ -161,9 +150,10 @@ export const createStoreHandler = async (
         const datatableRows = await getDatatableRows<StoresColumnNames>(
             datatable.id
         );
-        const storeRows = datatableRows.rows.find(
+        const storeRows = datatableRows?.rows.find(
             row => row.value.store_id === req.body.storeId
         );
+
         if (storeRows) {
             throw new Error('Store already exists');
         }

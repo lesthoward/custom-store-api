@@ -62,11 +62,20 @@ interface StoreDatatable {
     type: 'store';
 }
 
-export type UpdateDatatableUnion = UpdateStoreDatatable & {
+export type UpdateDatatableParams = UpdateDatatableUnion & {
     action?: 'addRecord' | 'replaceRecords';
     datatableName: string;
     datatableId: string;
 };
+
+export type UpdateDatatableUnion =
+    | UpdateStoreDatatable
+    | UpdateCustomerConfigurationsDatatable;
+
+interface UpdateCustomerConfigurationsDatatable {
+    type: 'customer_configurations';
+    data: Record<CustomerConfigurationsColumnNames, string>[];
+}
 
 interface UpdateStoreDatatable {
     type: 'store';
@@ -88,7 +97,7 @@ export interface TheekitGetDatatableRows<T extends string | number | symbol> {
     rows: ThreekitGetDatatableRow<T>[];
 }
 
-export interface ThreekitGetDatatableByName {
+export interface ThreekitGetDatatableResponse {
     id: string;
     orgId: string;
     name: string;
@@ -103,7 +112,7 @@ export interface ThreekitGetDatatableByName {
 }
 
 export interface GetDatatableByNameResponse {
-    datatable: ThreekitGetDatatableByName | undefined;
+    datatable: ThreekitGetDatatableResponse | undefined;
 }
 
 export interface ThreekitCreateDatatable {
