@@ -26,7 +26,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use('/api/v1/threekit', threekitRoutes);
+app.use('/', threekitRoutes);
 
 app.use('*', (req, res) => {
     res.status(404).send('The requested page does not exist');
