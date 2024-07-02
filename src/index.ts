@@ -9,7 +9,7 @@ const app: Application = express();
 const port = process.env.PORT || 5000;
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true, limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(morgan('dev'));
 app.use(express.static('public'));
 
