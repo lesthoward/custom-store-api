@@ -24,6 +24,7 @@ export const customerConfigurationsColumnInfo: CustomerConfigurationsColumnInfo 
             type: 'String',
         },
         { name: CustomerConfigurationsColumnNames.created_at, type: 'String' },
+        { name: CustomerConfigurationsColumnNames.picture, type: 'String' },
         { name: CustomerConfigurationsColumnNames.updated_at, type: 'String' },
     ];
 

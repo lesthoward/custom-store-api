@@ -9,6 +9,7 @@ export enum CustomerConfigurationsColumnNames {
     'configuration_name' = 'configuration_name',
     'configuration_data' = 'configuration_data',
     'created_at' = 'created_at',
+    'picture' = 'picture',
     'updated_at' = 'updated_at',
 }
 
@@ -27,6 +28,7 @@ export type CustomerConfigurationsColumnInfo = [
         type: 'String';
     },
     { name: CustomerConfigurationsColumnNames.created_at; type: 'String' },
+    { name: CustomerConfigurationsColumnNames.picture; type: 'String' },
     { name: CustomerConfigurationsColumnNames.updated_at; type: 'String' },
 ];
 
