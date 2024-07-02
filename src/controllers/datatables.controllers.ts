@@ -3,7 +3,7 @@ import {
     getCustomerConfigSchema,
     saveCustomerConfigSchema,
 } from '../validators/joi.validators';
-import { CatchError } from '../helpers/catch.helpers';
+import { RequestResponse } from '../helpers/catch.helpers';
 import {
     getDatatableById,
     getDatatableByName,
@@ -21,7 +21,7 @@ interface GetCustomerConfigQuery {
 
 export const getCustomerConfigHandler = async (
     req: Request<any, any, any, GetCustomerConfigQuery>,
-    res: Response
+    res: Response,
 ) => {
     try {
         await getCustomerConfigSchema.validateAsync(req.query);
@@ -32,30 +32,30 @@ export const getCustomerConfigHandler = async (
             storeRows.info.value.customer_configurations_datatable_id;
 
         const customerConfigurationsDatatableData = await getDatatableById(
-            customerConfigurationsDatatableId
+            customerConfigurationsDatatableId,
         );
 
         if (!customerConfigurationsDatatableData?.id) {
             throw new Error(
-                `Customer configurations datatable not found for store ${req.query.storeId}`
+                `Customer configurations datatable not found for store ${req.query.storeId}`,
             );
         }
 
         const customerConfigurationsDatatableRows = await getDatatableRows(
-            customerConfigurationsDatatableData.id
+            customerConfigurationsDatatableData.id,
         );
 
         const rows = customerConfigurationsDatatableRows?.rows.filter(
-            row => row.value.customer_id === req.query.customerId
+            row => row.value.customer_id === req.query.customerId,
         );
 
         res.json(rows || []);
     } catch (error: any) {
         res.status(500).json(
-            new CatchError({
+            new RequestResponse({
                 message: error?.message,
                 details: error,
-            })
+            }),
         );
     }
 };
@@ -71,7 +71,7 @@ interface SaveCustomerConfigParams {
 
 export const saveCustomerConfigHandler = async (
     req: Request<any, any, SaveCustomerConfigParams>,
-    res: Response
+    res: Response,
 ) => {
     try {
         // const input =
@@ -86,7 +86,7 @@ export const saveCustomerConfigHandler = async (
 
         const storesDatatableRows = (
             await getDatatableRows<StoresColumnNames>(
-                storesDatatable.datatable?.id
+                storesDatatable.datatable?.id,
             )
         )?.rows;
 
@@ -96,7 +96,7 @@ export const saveCustomerConfigHandler = async (
 
         // Get store reference from stores datatable
         const foundStoreDatatable = storesDatatableRows.find(
-            row => row.value.store_id === req.body.storeId
+            row => row.value.store_id === req.body.storeId,
         );
 
         if (!foundStoreDatatable) {
@@ -105,12 +105,12 @@ export const saveCustomerConfigHandler = async (
 
         // Get the customer configurations datatable
         const customersConfigurationsDatatable = await getDatatableById(
-            foundStoreDatatable.value.customer_configurations_datatable_id
+            foundStoreDatatable.value.customer_configurations_datatable_id,
         );
 
         if (!customersConfigurationsDatatable) {
             throw new Error(
-                'Not customer configurations datatable found to save customer configuration'
+                'Not customer configurations datatable found to save customer configuration',
             );
         }
 
@@ -122,7 +122,7 @@ export const saveCustomerConfigHandler = async (
         // Check if the customer configuration name already exists
         const existingCustomerConfiguration =
             customersConfigurationsDatatableRows?.find(
-                row => row.value.configuration_name === req.body.name
+                row => row.value.configuration_name === req.body.name,
             );
 
         if (existingCustomerConfiguration) {
@@ -146,13 +146,18 @@ export const saveCustomerConfigHandler = async (
             ],
         });
 
-        res.send('saveCustomerConfigHandler');
+        res.json(
+            new RequestResponse({
+                message: 'Customer configuration saved successfully',
+                isError: false,
+            }),
+        );
     } catch (error: any) {
         res.status(500).json(
-            new CatchError({
+            new RequestResponse({
                 message: error?.message,
                 details: error,
-            })
+            }),
         );
     }
 };

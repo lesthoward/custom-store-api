@@ -15,7 +15,7 @@ import {
 } from '../helpers/threekit.helpers';
 import { storesDatatableName } from '../constants/threekit.constants';
 import { StoresColumnNames } from '../types/threekit.types';
-import { CatchError } from '../helpers/catch.helpers';
+import { RequestResponse } from '../helpers/catch.helpers';
 
 interface DeleteStoreParams {
     storeId: string;
@@ -72,7 +72,7 @@ export const deleteStoreHandler = async (
         res.send('ok');
     } catch (error: any) {
         res.json(
-            new CatchError({
+            new RequestResponse({
                 message:
                     error?.message ||
                     'An error occurred while deleting the store.',
@@ -103,7 +103,7 @@ export const getStoreHandler = async (
         res.json(storeRows);
     } catch (error: any) {
         res.json(
-            new CatchError({
+            new RequestResponse({
                 message: error?.message,
                 details: error,
             })
@@ -186,7 +186,7 @@ export const createStoreHandler = async (
     } catch (error) {
         const knownError = error as any;
         res.status(knownError.status || 500).json(
-            new CatchError({
+            new RequestResponse({
                 message: knownError?.message,
                 details: knownError,
             })
@@ -227,7 +227,7 @@ export const createDatatableHandler = async (
         res.json(apiResponse);
     } catch (error: any) {
         res.json(
-            new CatchError({
+            new RequestResponse({
                 message: error?.response?.data?.message || error?.message,
                 details: error,
             })
