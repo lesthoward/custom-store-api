@@ -126,7 +126,9 @@ export const saveCustomerConfigHandler = async (
             );
 
         if (existingCustomerConfiguration) {
-            throw new Error(`Configuration "${req.body.name}" already exists`);
+            throw new Error(
+                `Configuration "${req.body.name.trim()}" already exists`
+            );
         }
 
         await updateDatatable({
