@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import 'dotenv/config';
 import { threekitRoutes } from './routes/api.routes';
 import cors from 'cors';
+import bodyParser from 'body-parser'
 
 const app: Application = express();
 const port = process.env.PORT || 5000;
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(morgan('dev'));
 app.use(express.static('public'));
+app.use(bodyParser.json({ limit: '100mb' }));
 
 // CORS
 app.use(cors());
