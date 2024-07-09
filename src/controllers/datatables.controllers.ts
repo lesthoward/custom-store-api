@@ -141,7 +141,7 @@ export const saveCustomerConfigHandler = async (
                     customer_id: req.body.customerId,
                     configuration_id: req.body.id,
                     configuration_name: req.body.name.trim(),
-                    configuration_data: req.body.data,
+                    configuration_data: JSON.stringify(req.body.data),
                     created_at: new Date().toISOString(),
                     picture: req.body.picture,
                     updated_at: 'null',
