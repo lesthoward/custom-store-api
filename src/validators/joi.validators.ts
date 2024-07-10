@@ -12,7 +12,7 @@ export const saveCustomerConfigSchema = Joi.object({
     name: Joi.string().required().max(120),
     data: Joi.object({
         product_handle: Joi.string().required().max(120),
-        formData: Joi.object(),
+        form_data: Joi.object().required(),
     }).required(),
     customerId: Joi.string().required().max(120),
 });
