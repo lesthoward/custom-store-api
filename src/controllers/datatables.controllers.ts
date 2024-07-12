@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import {
+    getConfigurationByIdSchema,
     getCustomerConfigSchema,
     saveCustomerConfigSchema,
 } from '../validators/joi.validators';
@@ -108,7 +109,7 @@ export const saveCustomerConfigHandler = async (
 
         if (!customersConfigurationsDatatable) {
             throw new Error(
-                'Not customer configurations datatable found to save customer configuration'
+                'No customer configurations datatable found to save customer configuration'
             );
         }
 
@@ -157,6 +158,112 @@ export const saveCustomerConfigHandler = async (
         );
     } catch (error: any) {
         res.status(500).json(
+            new RequestResponse({
+                message: error?.message,
+                details: error,
+            })
+        );
+    }
+};
+
+interface GetConfigurationByIdQuery {
+    configurationId: string;
+    storeId: string;
+}
+
+export const getConfigurationById = async (
+    req: Request<any, any, any, GetConfigurationByIdQuery>,
+    res: Response
+) => {
+    try {
+        await getConfigurationByIdSchema.validateAsync(req.query);
+
+        // Get the store from the stores datatable
+        const storesDatatable = await getDatatableByName(storesDatatableName);
+
+        if (!storesDatatable.datatable) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: `Datatable ${storesDatatableName} not found.`,
+                })
+            );
+        }
+
+        const storesDatatableRows = (
+            await getDatatableRows<StoresColumnNames>(
+                storesDatatable.datatable?.id
+            )
+        )?.rows;
+
+        if (!storesDatatableRows) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: 'No stores found',
+                })
+            );
+        }
+
+        // Get store reference from stores datatable
+        const foundStoreDatatable = storesDatatableRows.find(
+            row => row.value.store_id === req.query.storeId
+        );
+
+        if (!foundStoreDatatable) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: 'No store found with the provided ID',
+                })
+            );
+        }
+
+        // Get the configurations datatable
+        const configurationsDatatable = await getDatatableById(
+            foundStoreDatatable.value.customer_configurations_datatable_id
+        );
+
+        if (!configurationsDatatable) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: 'No configurations datatable found',
+                })
+            );
+        }
+
+        const configurationsDatatableRows = (
+            await getDatatableRows(configurationsDatatable.id)
+        )?.rows;
+
+        if (!configurationsDatatableRows) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: 'No configurations found',
+                })
+            );
+        }
+
+        const getConfigurationById = configurationsDatatableRows.find(
+            row =>
+                row.value.configuration_id.toLocaleLowerCase().trim() ===
+                req.query.configurationId.toLocaleLowerCase().trim()
+        );
+
+        if (!getConfigurationById) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: 'No configuration found',
+                })
+            );
+        }
+
+        res.json(
+            new RequestResponse({
+                message: 'Configuration found successfully',
+                details: getConfigurationById,
+                isError: false,
+            })
+        );
+    } catch (error: any) {
+        res.status(error.status || 500).json(
             new RequestResponse({
                 message: error?.message,
                 details: error,
