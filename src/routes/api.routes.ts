@@ -6,6 +6,7 @@ import {
     getStoreHandler,
 } from '../controllers/stores.controllers';
 import {
+    deleteConfigurationHandler,
     getConfigurationById,
     getCustomerConfigHandler,
     saveCustomerConfigHandler,
@@ -20,5 +21,6 @@ router.delete('/store', deleteStoreHandler);
 router.post('/customer_configurations', saveCustomerConfigHandler);
 router.get('/customer_configurations', getCustomerConfigHandler);
 router.get('/configuration', getConfigurationById);
+router.delete('/customer_configurations', deleteConfigurationHandler);
 
 export { router as threekitRoutes };

@@ -46,3 +46,9 @@ export const getConfigurationByIdSchema = Joi.object({
     storeId: Joi.string().required().max(120),
     configurationId: Joi.string().required().max(120),
 });
+
+export const deleteConfigurationSchema = Joi.object({
+    configurationId: Joi.string().required().max(120),
+    customerId: Joi.string().required().max(120),
+    storeId: Joi.string().required().max(120),
+});

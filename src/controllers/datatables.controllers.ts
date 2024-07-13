@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import {
+    deleteConfigurationSchema,
     getConfigurationByIdSchema,
     getCustomerConfigSchema,
     saveCustomerConfigSchema,
@@ -13,7 +14,10 @@ import {
     updateDatatable,
 } from '../helpers/threekit.helpers';
 import { storesDatatableName } from '../constants/threekit.constants';
-import { StoresColumnNames } from '../types/threekit.types';
+import {
+    CustomerConfigurationsColumnNames,
+    StoresColumnNames,
+} from '../types/threekit.types';
 
 interface GetCustomerConfigQuery {
     storeId: string;
@@ -258,6 +262,141 @@ export const getConfigurationById = async (
         res.json(
             new RequestResponse({
                 message: 'Configuration found successfully',
+                details: getConfigurationById,
+                isError: false,
+            })
+        );
+    } catch (error: any) {
+        res.status(error.status || 500).json(
+            new RequestResponse({
+                message: error?.message,
+                details: error,
+            })
+        );
+    }
+};
+
+interface DeleteConfigurationQuery {
+    configurationId: string;
+    customerId: string;
+    storeId: string;
+}
+
+export const deleteConfigurationHandler = async (
+    req: Request<any, any, any, DeleteConfigurationQuery>,
+    res: Response
+) => {
+    try {
+        await deleteConfigurationSchema.validateAsync(req.query);
+
+        // Get the store from the stores datatable
+        const storesDatatable = await getDatatableByName(storesDatatableName);
+
+        if (!storesDatatable.datatable) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: `Datatable ${storesDatatableName} not found.`,
+                })
+            );
+        }
+
+        const storesDatatableRows = (
+            await getDatatableRows<StoresColumnNames>(
+                storesDatatable.datatable?.id
+            )
+        )?.rows;
+
+        if (!storesDatatableRows) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: 'No stores found',
+                })
+            );
+        }
+
+        // Get store reference from stores datatable
+        const foundStoreDatatable = storesDatatableRows.find(
+            row => row.value.store_id === req.query.storeId
+        );
+
+        if (!foundStoreDatatable) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: 'No store found with the provided ID',
+                })
+            );
+        }
+
+        // Get the configurations datatable
+        const configurationsDatatable = await getDatatableById(
+            foundStoreDatatable.value.customer_configurations_datatable_id
+        );
+
+        if (!configurationsDatatable) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: 'No configurations datatable found',
+                })
+            );
+        }
+
+        const getConfigurationRows = (
+            await getDatatableRows<CustomerConfigurationsColumnNames>(
+                configurationsDatatable.id
+            )
+        )?.rows;
+
+        const getConfigurationById = getConfigurationRows?.find(
+            row =>
+                row.value.configuration_id.toLocaleLowerCase().trim() !==
+                req.query.configurationId.toLocaleLowerCase().trim()
+        );
+
+        if (getConfigurationById?.value.customer_id !== req.query.customerId) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: 'Not authorized to delete this configuration',
+                })
+            );
+        }
+
+        if (!getConfigurationById) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: 'No configuration found',
+                })
+            );
+        }
+
+        const filteredConfigurations = getConfigurationRows
+            ?.filter(
+                row =>
+                    row.value.configuration_id.toLocaleLowerCase().trim() !==
+                    getConfigurationById.value.configuration_id
+                        .toLocaleLowerCase()
+                        .trim()
+            )
+            .map(row => row.value);
+
+        if (!filteredConfigurations?.length) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: 'No configurations found',
+                })
+            );
+        }
+
+        await updateDatatable({
+            action: 'replaceRecords',
+            type: 'customer_configurations',
+            datatableId: configurationsDatatable.id,
+            datatableName: configurationsDatatable.name,
+            data: filteredConfigurations,
+        });
+
+        return res.json(
+            new RequestResponse({
+                message: 'Configuration deleted successfully',
                 details: getConfigurationById,
                 isError: false,
             })
