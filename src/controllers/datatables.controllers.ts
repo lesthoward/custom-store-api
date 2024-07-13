@@ -402,6 +402,7 @@ export const deleteConfigurationHandler = async (
             })
         );
     } catch (error: any) {
+        console.error('Error deleting configuration', error);
         res.status(error.status || 500).json(
             new RequestResponse({
                 message: error?.message,
