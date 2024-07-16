@@ -63,12 +63,7 @@ export const getCustomerConfigHandler = async (
                 await BusinessApi.getThreekitConfigurationById(configurationId);
 
             if (!configuration.ok) {
-                return res.json(
-                    new RequestResponse({
-                        message: 'Error getting configuration',
-                        details: configuration,
-                    })
-                );
+                console.error('Error getting configuration', configuration);
             }
 
             const data = await configuration.json();
@@ -371,25 +366,19 @@ export const deleteConfigurationHandler = async (
             )
         )?.rows;
 
-        console.info('getConfigurationRows', getConfigurationRows);
-
-        console.info('row.value.configuration_id', req.query.configurationId);
-        console.info('req.query.configurationId', req.query.configurationId);
         const getConfigurationById = getConfigurationRows?.find(
             row =>
                 row.value.configuration_id.toLocaleLowerCase().trim() ===
                 req.query.configurationId.toLocaleLowerCase().trim()
         );
 
-        console.info('getConfigurationById', getConfigurationById);
-
-        // if (!getConfigurationById) {
-        //     return res.status(404).json(
-        //         new RequestResponse({
-        //             message: 'No configuration found',
-        //         })
-        //     );
-        // }
+        if (!getConfigurationById) {
+            return res.status(404).json(
+                new RequestResponse({
+                    message: 'No configuration found',
+                })
+            );
+        }
 
         if (getConfigurationById?.value.customer_id !== req.query.customerId) {
             return res.status(404).json(
