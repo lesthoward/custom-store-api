@@ -279,13 +279,28 @@ export const getConfigurationById = async (
             );
         }
 
-        res.json(
-            new RequestResponse({
-                message: 'Configuration found successfully',
-                details: getConfigurationById,
-                isError: false,
-            })
-        );
+        const threekitConfigurationResponse =
+            await BusinessApi.getThreekitConfigurationById(
+                getConfigurationById.value.configuration_id
+            );
+        if (!threekitConfigurationResponse.ok) {
+            console.error(
+                'Error getting configuration data',
+                threekitConfigurationResponse
+            );
+            return res.json(
+                new RequestResponse({
+                    message: 'Error getting configuration data',
+                    details: threekitConfigurationResponse,
+                })
+            );
+        }
+        const configurationData = await threekitConfigurationResponse.json();
+
+        res.json({
+            ...getConfigurationById.value,
+            configuration_data: configurationData,
+        });
     } catch (error: any) {
         res.status(error.status || 500).json(
             new RequestResponse({
