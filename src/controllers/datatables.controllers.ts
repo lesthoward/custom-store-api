@@ -371,11 +371,25 @@ export const deleteConfigurationHandler = async (
             )
         )?.rows;
 
+        console.info('getConfigurationRows', getConfigurationRows);
+
+        console.info('row.value.configuration_id', req.query.configurationId);
+        console.info('req.query.configurationId', req.query.configurationId);
         const getConfigurationById = getConfigurationRows?.find(
             row =>
-                row.value.configuration_id.toLocaleLowerCase().trim() !==
+                row.value.configuration_id.toLocaleLowerCase().trim() ===
                 req.query.configurationId.toLocaleLowerCase().trim()
         );
+
+        console.info('getConfigurationById', getConfigurationById);
+
+        // if (!getConfigurationById) {
+        //     return res.status(404).json(
+        //         new RequestResponse({
+        //             message: 'No configuration found',
+        //         })
+        //     );
+        // }
 
         if (getConfigurationById?.value.customer_id !== req.query.customerId) {
             return res.status(404).json(
@@ -385,29 +399,14 @@ export const deleteConfigurationHandler = async (
             );
         }
 
-        if (!getConfigurationById) {
-            return res.status(404).json(
-                new RequestResponse({
-                    message: 'No configuration found',
-                })
-            );
-        }
-
-        const filteredConfigurations = getConfigurationRows?.filter(
-            row =>
-                row.value.configuration_id.toLocaleLowerCase().trim() !==
-                getConfigurationById.value.configuration_id
-                    .toLocaleLowerCase()
-                    .trim()
-        );
-
-        if (!filteredConfigurations?.length) {
-            return res.status(404).json(
-                new RequestResponse({
-                    message: 'No configurations found',
-                })
-            );
-        }
+        const filteredConfigurations =
+            getConfigurationRows?.filter(
+                row =>
+                    row.value.configuration_id.toLocaleLowerCase().trim() !==
+                    getConfigurationById.value.configuration_id
+                        .toLocaleLowerCase()
+                        .trim()
+            ) || [];
 
         await updateDatatable({
             action: 'replaceRecords',
@@ -417,13 +416,7 @@ export const deleteConfigurationHandler = async (
             data: filteredConfigurations.map(row => row.value),
         });
 
-        return res.json(
-            new RequestResponse({
-                message: 'Configuration deleted successfully',
-                details: getConfigurationById,
-                isError: false,
-            })
-        );
+        return res.json(getConfigurationById);
     } catch (error: any) {
         console.error('Error deleting configuration', error);
         res.status(error.status || 500).json(
