@@ -18,6 +18,7 @@ import {
     CustomerConfigurationsColumnNames,
     StoresColumnNames,
 } from '../types/threekit.types';
+import { BusinessApi } from '../services/business.services';
 
 interface GetCustomerConfigQuery {
     storeId: string;
@@ -36,25 +37,49 @@ export const getCustomerConfigHandler = async (
         const customerConfigurationsDatatableId =
             storeRows.info.value.customer_configurations_datatable_id;
 
-        const customerConfigurationsDatatableData = await getDatatableById(
+        const customerConfigurationsDatatableDatatable = await getDatatableById(
             customerConfigurationsDatatableId
         );
 
-        if (!customerConfigurationsDatatableData?.id) {
+        if (!customerConfigurationsDatatableDatatable?.id) {
             throw new Error(
                 `Customer configurations datatable not found for store ${req.query.storeId}`
             );
         }
 
         const customerConfigurationsDatatableRows = await getDatatableRows(
-            customerConfigurationsDatatableData.id
+            customerConfigurationsDatatableDatatable.id
         );
 
         const rows = customerConfigurationsDatatableRows?.rows.filter(
             row => row.value.customer_id === req.query.customerId
         );
 
-        res.json(rows || []);
+        const configuratios = [];
+        for (const row of rows || []) {
+            const configurationId = row.value.configuration_id;
+
+            const configuration =
+                await BusinessApi.getThreekitConfigurationById(configurationId);
+
+            if (!configuration.ok) {
+                return res.json(
+                    new RequestResponse({
+                        message: 'Error getting configuration',
+                        details: configuration,
+                    })
+                );
+            }
+
+            const data = await configuration.json();
+
+            configuratios.push({
+                ...row.value,
+                configuration_data: data,
+            });
+        }
+
+        res.json(configuratios);
     } catch (error: any) {
         res.status(500).json(
             new RequestResponse({
@@ -368,15 +393,13 @@ export const deleteConfigurationHandler = async (
             );
         }
 
-        const filteredConfigurations = getConfigurationRows
-            ?.filter(
-                row =>
-                    row.value.configuration_id.toLocaleLowerCase().trim() !==
-                    getConfigurationById.value.configuration_id
-                        .toLocaleLowerCase()
-                        .trim()
-            )
-            .map(row => row.value);
+        const filteredConfigurations = getConfigurationRows?.filter(
+            row =>
+                row.value.configuration_id.toLocaleLowerCase().trim() !==
+                getConfigurationById.value.configuration_id
+                    .toLocaleLowerCase()
+                    .trim()
+        );
 
         if (!filteredConfigurations?.length) {
             return res.status(404).json(
@@ -391,7 +414,7 @@ export const deleteConfigurationHandler = async (
             type: 'customer_configurations',
             datatableId: configurationsDatatable.id,
             datatableName: configurationsDatatable.name,
-            data: filteredConfigurations,
+            data: filteredConfigurations.map(row => row.value),
         });
 
         return res.json(
